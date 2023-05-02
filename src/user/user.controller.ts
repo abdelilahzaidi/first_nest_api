@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Req } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './models/user.entity';
 import { UserCreateDto } from './models/user-create.dto';
@@ -13,21 +13,25 @@ export class UserController {
         private readonly userService: UserService,
         private readonly authService: AuthService
         ){}
+    // @Get('all')
+    // async all():Promise<User[]>{
+    //     return await this.userService.all()
+    // }
     @Get('all')
-    async all():Promise<User[]>{
-        return await this.userService.all()
+    async all(@Query('page') page:number=1):Promise<User[]>{
+        return await this.userService.paginate(page)
     }
+   
     @Post('create')
     async create(@Body() body: UserCreateDto): Promise<User> {
         const password = await bcrypt.hash('1234', 12);
 
-        //const {role_id, ...data} = body;
-        const { ...data} = body;
+        const {role_id, ...data} = body;
 
         return this.userService.create({
             ...data,
             password,
-           //role: {id: role_id}
+            role: {id: role_id}
         });
     }
 
@@ -74,12 +78,11 @@ export class UserController {
         @Param('id') id: number,
         @Body() body: UserUpdateDto
     ) {
-        //const {role_id, ...data} = body;
-        const { ...data} = body;
-
+        const {role_id, ...data} = body;
+        
         await this.userService.update(id, {
             ...data,
-            //role: {id: role_id}
+            role: {id: role_id}
         });
 
         return this.userService.findOne({where:{id}});
